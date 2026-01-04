@@ -144,14 +144,28 @@ def get_api_key() -> str:
         return ""
 
 
-def get_client(api_key: str):
+def get_client():
+    """
+    Robust OpenAI client initialization
+    - ignores system proxy env vars
+    - compatible with openai>=1.0.0
+    """
     if OpenAI is None:
         raise RuntimeError(
-            "OpenAI SDK nicht verfügbar. Bitte installiere openai>=1.0.0 (z.B. `pip install -U openai`)."
+            "OpenAI SDK nicht verfügbar. Bitte installiere openai>=1.0.0"
         )
+
+    api_key = get_api_key()
     if not api_key:
         raise AuthenticationError("Kein OPENAI_API_KEY gefunden.")
-    return OpenAI(api_key=api_key)
+
+    http_client = httpx.Client(proxies=None, timeout=60.0)
+
+    return OpenAI(
+        api_key=api_key,
+        http_client=http_client,
+    )
+
 
 
 def friendly_error(e: Exception) -> str:
