@@ -329,7 +329,7 @@ Pre-Header 1: [Text]
 """
 
             header_response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4",
                 messages=[
                     {"role": "system", "content": "Du bist eine Expertin für E-Mail-Marketing im Bereich Trauma-Heilung und Empowerment."},
                     {"role": "user", "content": header_prompt}
