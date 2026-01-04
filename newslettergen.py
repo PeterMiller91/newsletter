@@ -62,18 +62,49 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# API Key aus Streamlit Secrets laden
+try:
+    api_key = st.secrets["OPENAI_API_KEY"]
+    api_key_loaded = True
+except Exception as e:
+    api_key = None
+    api_key_loaded = False
+
 # Header
 st.markdown("# 💜 Newsletter Generator")
 st.markdown("### *Raus aus dem Gift* - Deine Stimme für Heilung und Empowerment")
 st.markdown("---")
 
-# Sidebar für API Key
+# Sidebar für Informationen
 with st.sidebar:
-    st.markdown("### ⚙️ Einstellungen")
-    api_key = st.text_input("OpenAI API Key", type="password", help="Dein OpenAI API Schlüssel")
+    st.markdown("### ⚙️ API Status")
+    if api_key_loaded:
+        st.success("✅ API Key erfolgreich geladen")
+    else:
+        st.error("❌ API Key nicht gefunden")
+        st.info("""
+        **So konfigurierst du deinen API Key:**
+        
+        1. Erstelle eine Datei `.streamlit/secrets.toml` im Projektordner
+        2. Füge folgende Zeile hinzu:
+        ```
+        OPENAI_API_KEY = "dein-api-key-hier"
+        ```
+        3. Starte die App neu
+        
+        **Für Streamlit Cloud:**
+        - Gehe zu App Settings → Secrets
+        - Füge dort den API Key hinzu
+        """)
+    
     st.markdown("---")
     st.markdown("### 💡 Über diese App")
     st.info("Erstelle wirkungsvolle Newsletter für deine Community. Unterstütze Überlebende narzisstischen Missbrauchs mit authentischen, heilenden Inhalten.")
+
+# Nur fortfahren wenn API Key vorhanden
+if not api_key_loaded:
+    st.warning("⚠️ Bitte konfiguriere zuerst deinen OpenAI API Key in den Streamlit Secrets (siehe Sidebar).")
+    st.stop()
 
 # Hauptkonfiguration
 col1, col2 = st.columns(2)
@@ -224,16 +255,13 @@ zusatz_info = st.text_area(
 # Generate Button
 st.markdown("---")
 if st.button("✨ Newsletter generieren", use_container_width=True):
-    if not api_key:
-        st.error("⚠️ Bitte gib deinen OpenAI API Key in der Sidebar ein.")
-    else:
-        with st.spinner("💜 Dein Newsletter wird erstellt... Dies kann einen Moment dauern."):
-            try:
-                # OpenAI Client initialisieren
-                client = openai.OpenAI(api_key=api_key)
-                
-                # Prompt für Newsletter-Erstellung
-                newsletter_prompt = f"""
+    with st.spinner("💜 Dein Newsletter wird erstellt... Dies kann einen Moment dauern."):
+        try:
+            # OpenAI Client initialisieren
+            client = openai.OpenAI(api_key=api_key)
+            
+            # Prompt für Newsletter-Erstellung
+            newsletter_prompt = f"""
 Du bist eine einfühlsame Content-Spezialistin für die Brand "Raus aus dem Gift", die Opfer narzisstischen Missbrauchs unterstützt.
 
 Erstelle einen {newsletter_typ} mit folgenden Parametern:
@@ -261,20 +289,20 @@ Strukturiere den Newsletter mit:
 Schreibe auf Deutsch, authentisch und mit Herz.
 """
 
-                # Newsletter generieren
-                newsletter_response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "Du bist eine einfühlsame Content-Spezialistin für Trauma-Heilung und Empowerment von Frauen nach narzisstischem Missbrauch."},
-                        {"role": "user", "content": newsletter_prompt}
-                    ],
-                    temperature=0.7
-                )
-                
-                newsletter_content = newsletter_response.choices[0].message.content
-                
-                # Prompt für Header und Pre-Header
-                header_prompt = f"""
+            # Newsletter generieren
+            newsletter_response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Du bist eine einfühlsame Content-Spezialistin für Trauma-Heilung und Empowerment von Frauen nach narzisstischem Missbrauch."},
+                    {"role": "user", "content": newsletter_prompt}
+                ],
+                temperature=0.7
+            )
+            
+            newsletter_content = newsletter_response.choices[0].message.content
+            
+            # Prompt für Header und Pre-Header
+            header_prompt = f"""
 Erstelle 5 virale, aufmerksamkeitsstarke Header-Varianten und passende Pre-Header für folgenden Newsletter:
 
 Thema: {haupt_thema} - {spezifisches_thema}
@@ -300,38 +328,38 @@ Pre-Header 1: [Text]
 [Wiederhole für 2-5]
 """
 
-                header_response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "Du bist eine Expertin für E-Mail-Marketing im Bereich Trauma-Heilung und Empowerment."},
-                        {"role": "user", "content": header_prompt}
-                    ],
-                    temperature=0.8
-                )
-                
-                headers_content = header_response.choices[0].message.content
-                
-                # Ergebnisse anzeigen
-                st.success("✅ Newsletter erfolgreich erstellt!")
-                
-                # Header Optionen
-                st.markdown("## 📬 Header & Pre-Header Vorschläge")
-                st.markdown('<div class="header-option">', unsafe_allow_html=True)
-                st.markdown(headers_content)
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Newsletter Content
-                st.markdown("## ✍️ Newsletter-Inhalt")
-                st.markdown('<div class="success-box">', unsafe_allow_html=True)
-                st.markdown(newsletter_content)
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Download Optionen
-                st.markdown("---")
-                col_dl1, col_dl2 = st.columns(2)
-                
-                with col_dl1:
-                    full_content = f"""
+            header_response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Du bist eine Expertin für E-Mail-Marketing im Bereich Trauma-Heilung und Empowerment."},
+                    {"role": "user", "content": header_prompt}
+                ],
+                temperature=0.8
+            )
+            
+            headers_content = header_response.choices[0].message.content
+            
+            # Ergebnisse anzeigen
+            st.success("✅ Newsletter erfolgreich erstellt!")
+            
+            # Header Optionen
+            st.markdown("## 📬 Header & Pre-Header Vorschläge")
+            st.markdown('<div class="header-option">', unsafe_allow_html=True)
+            st.markdown(headers_content)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Newsletter Content
+            st.markdown("## ✍️ Newsletter-Inhalt")
+            st.markdown('<div class="success-box">', unsafe_allow_html=True)
+            st.markdown(newsletter_content)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Download Optionen
+            st.markdown("---")
+            col_dl1, col_dl2 = st.columns(2)
+            
+            with col_dl1:
+                full_content = f"""
 HEADER & PRE-HEADER OPTIONEN:
 {headers_content}
 
@@ -349,34 +377,34 @@ Konfiguration:
 - Zielgruppe: {zielgruppe}
 - Tonalität: {ton}
 """
-                    st.download_button(
-                        label="💾 Als Text-Datei speichern",
-                        data=full_content,
-                        file_name=f"newsletter_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-                        mime="text/plain"
-                    )
-                
-                with col_dl2:
-                    st.download_button(
-                        label="📋 Als JSON speichern",
-                        data=json.dumps({
-                            "typ": newsletter_typ,
-                            "haupt_thema": haupt_thema,
-                            "spezifisches_thema": spezifisches_thema,
-                            "zielgruppe": zielgruppe,
-                            "ton": ton,
-                            "cta_fokus": cta_fokus,
-                            "headers": headers_content,
-                            "content": newsletter_content,
-                            "generiert_am": datetime.now().isoformat()
-                        }, indent=2, ensure_ascii=False),
-                        file_name=f"newsletter_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
-                        mime="application/json"
-                    )
-                
-            except Exception as e:
-                st.error(f"❌ Fehler bei der Newsletter-Erstellung: {str(e)}")
-                st.info("Bitte überprüfe deinen API Key und stelle sicher, dass du Zugriff auf GPT-4 hast.")
+                st.download_button(
+                    label="💾 Als Text-Datei speichern",
+                    data=full_content,
+                    file_name=f"newsletter_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                    mime="text/plain"
+                )
+            
+            with col_dl2:
+                st.download_button(
+                    label="📋 Als JSON speichern",
+                    data=json.dumps({
+                        "typ": newsletter_typ,
+                        "haupt_thema": haupt_thema,
+                        "spezifisches_thema": spezifisches_thema,
+                        "zielgruppe": zielgruppe,
+                        "ton": ton,
+                        "cta_fokus": cta_fokus,
+                        "headers": headers_content,
+                        "content": newsletter_content,
+                        "generiert_am": datetime.now().isoformat()
+                    }, indent=2, ensure_ascii=False),
+                    file_name=f"newsletter_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
+                    mime="application/json"
+                )
+            
+        except Exception as e:
+            st.error(f"❌ Fehler bei der Newsletter-Erstellung: {str(e)}")
+            st.info("Bitte überprüfe deinen API Key und stelle sicher, dass du Zugriff auf GPT-4 hast.")
 
 # Footer
 st.markdown("---")
