@@ -291,7 +291,7 @@ Schreibe auf Deutsch, authentisch und mit Herz.
 
             # Newsletter generieren
             newsletter_response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "Du bist eine einfühlsame Content-Spezialistin für Trauma-Heilung und Empowerment von Frauen nach narzisstischem Missbrauch."},
                     {"role": "user", "content": newsletter_prompt}
@@ -329,7 +329,7 @@ Pre-Header 1: [Text]
 """
 
             header_response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "Du bist eine Expertin für E-Mail-Marketing im Bereich Trauma-Heilung und Empowerment."},
                     {"role": "user", "content": header_prompt}
